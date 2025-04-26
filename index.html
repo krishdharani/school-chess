@@ -6,48 +6,53 @@
     <title>School Chess - Multiplayer</title>
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     <style>
-        /* ... (keep all existing styles) ... */
-        
-        .game-id-container {
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        #board {
+            width: 400px;
+            margin: 20px auto;
+        }
+        .game-id-box {
             background-color: #e8f4f8;
-            padding: 1rem;
+            padding: 15px;
             border-radius: 5px;
-            margin: 1rem 0;
-            border: 1px solid #3498db;
+            margin: 20px 0;
+            border: 2px solid #3498db;
         }
-
-        .game-id-container h3 {
-            margin: 0 0 0.5rem 0;
-            color: #2c3e50;
-        }
-
         .game-id {
-            font-size: 1.2rem;
+            font-size: 24px;
             font-weight: bold;
             color: #3498db;
-            word-break: break-all;
+            margin: 10px 0;
         }
-
-        .copy-button {
+        button {
             background-color: #3498db;
             color: white;
             border: none;
-            padding: 5px 10px;
-            border-radius: 3px;
+            padding: 10px 20px;
+            border-radius: 5px;
             cursor: pointer;
-            margin-top: 0.5rem;
-            font-size: 0.9rem;
+            margin: 10px 0;
         }
-
-        .copy-button:hover {
+        button:hover {
             background-color: #2980b9;
         }
-
-        .copy-success {
-            color: #27ae60;
-            font-size: 0.9rem;
-            margin-top: 0.5rem;
-            display: none;
+        input {
+            padding: 10px;
+            width: 200px;
+            margin-right: 10px;
         }
     </style>
 </head>
@@ -55,50 +60,20 @@
     <div class="container">
         <h1>School Chess - Multiplayer</h1>
         
-        <div class="game-section">
-            <div class="board-container">
-                <div id="board" style="width: 400px"></div>
-            </div>
-            
-            <div class="game-info">
-                <div class="game-controls">
-                    <button id="createGame">Create New Game</button>
-                    <div class="join-game">
-                        <input type="text" id="gameId" placeholder="Enter Game ID">
-                        <button id="joinGame">Join Game</button>
-                    </div>
-                </div>
-
-                <div class="status-container">
-                    <div id="status">Game not started</div>
-                    <div id="playerColor"></div>
-                </div>
-
-                <div class="game-id-container" id="gameIdContainer" style="display: none;">
-                    <h3>Game ID (Share this with your friend):</h3>
-                    <div class="game-id" id="gameIdDisplay"></div>
-                    <button class="copy-button" id="copyButton">Copy Game ID</button>
-                    <div class="copy-success" id="copySuccess">Game ID copied!</div>
-                </div>
-
-                <div class="move-history" id="moveHistory">
-                    <h3>Move History</h3>
-                    <div id="moves"></div>
-                </div>
-            </div>
+        <button id="createGame">Create New Game</button>
+        
+        <div class="game-id-box" id="gameIdBox" style="display: none;">
+            <h3>Game ID (Share this with your friend):</h3>
+            <div class="game-id" id="gameIdDisplay"></div>
+            <button id="copyButton">Copy Game ID</button>
         </div>
 
-        <div class="instructions">
-            <h2>How to Play</h2>
-            <ol>
-                <li>One player clicks "Create New Game" to start a new game</li>
-                <li>Share the Game ID with your friend</li>
-                <li>Your friend enters the Game ID and clicks "Join Game"</li>
-                <li>The creator plays as White, the joiner plays as Black</li>
-                <li>Take turns moving pieces by dragging them</li>
-                <li>Checkmate ends the game</li>
-            </ol>
+        <div>
+            <input type="text" id="gameIdInput" placeholder="Enter Game ID">
+            <button id="joinGame">Join Game</button>
         </div>
+
+        <div id="board"></div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -107,120 +82,42 @@
     <script>
         let game = new Chess();
         let board = null;
-        let playerColor = null;
         let gameId = null;
-        let moveCount = 0;
 
-        function updateStatus() {
-            const statusEl = document.getElementById('status');
-            if (game.isGameOver()) {
-                if (game.isCheckmate()) {
-                    statusEl.textContent = `Game Over - ${game.turn() === 'w' ? 'Black' : 'White'} wins by checkmate!`;
-                } else if (game.isDraw()) {
-                    statusEl.textContent = 'Game Over - Draw!';
-                } else {
-                    statusEl.textContent = 'Game Over';
-                }
-            } else {
-                statusEl.textContent = `Current Turn: ${game.turn() === 'w' ? 'White' : 'Black'}`;
-            }
+        function showGameId(id) {
+            document.getElementById('gameIdDisplay').textContent = id;
+            document.getElementById('gameIdBox').style.display = 'block';
         }
 
-        function updatePlayerColor() {
-            const colorEl = document.getElementById('playerColor');
-            colorEl.textContent = playerColor ? `You are playing as: ${playerColor === 'w' ? 'White' : 'Black'}` : '';
-        }
-
-        function updateGameId() {
-            const gameIdEl = document.getElementById('gameIdDisplay');
-            const gameIdContainer = document.getElementById('gameIdContainer');
-            if (gameId) {
-                gameIdEl.textContent = gameId;
-                gameIdContainer.style.display = 'block';
-            } else {
-                gameIdContainer.style.display = 'none';
-            }
-        }
-
-        function addMoveToHistory(move) {
-            moveCount++;
-            const movesEl = document.getElementById('moves');
-            const moveDiv = document.createElement('div');
-            moveDiv.textContent = `${moveCount}. ${move.from} → ${move.to}`;
-            movesEl.appendChild(moveDiv);
-            movesEl.scrollTop = movesEl.scrollHeight;
-        }
-
-        function onDragStart(source, piece) {
-            if (game.isGameOver()) return false;
-            if (playerColor !== game.turn()) return false;
-            if (playerColor === 'w' && piece.search(/^b/) !== -1) return false;
-            if (playerColor === 'b' && piece.search(/^w/) !== -1) return false;
-        }
-
-        function onDrop(source, target) {
-            const move = game.move({
-                from: source,
-                to: target,
-                promotion: 'q'
-            });
-
-            if (move === null) return 'snapback';
-            
-            board.position(game.fen());
-            updateStatus();
-            addMoveToHistory(move);
-        }
-
-        function startNewGame() {
-            game = new Chess();
-            board.position(game.fen());
-            updateStatus();
-            document.getElementById('moves').innerHTML = '';
-            moveCount = 0;
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const config = {
-                draggable: true,
-                position: 'start',
-                onDragStart: onDragStart,
-                onDrop: onDrop,
-                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
-            };
-            
-            board = Chessboard('board', config);
-            
-            document.getElementById('createGame').addEventListener('click', () => {
-                gameId = Date.now().toString();
-                playerColor = 'w';
-                startNewGame();
-                updatePlayerColor();
-                updateGameId();
-            });
-
-            document.getElementById('joinGame').addEventListener('click', () => {
-                const gameIdInput = document.getElementById('gameId').value;
-                if (gameIdInput) {
-                    gameId = gameIdInput;
-                    playerColor = 'b';
-                    updatePlayerColor();
-                    updateGameId();
-                }
-            });
-
-            document.getElementById('copyButton').addEventListener('click', () => {
-                const gameIdText = document.getElementById('gameIdDisplay').textContent;
-                navigator.clipboard.writeText(gameIdText).then(() => {
-                    const copySuccess = document.getElementById('copySuccess');
-                    copySuccess.style.display = 'block';
-                    setTimeout(() => {
-                        copySuccess.style.display = 'none';
-                    }, 2000);
+        document.getElementById('createGame').addEventListener('click', () => {
+            gameId = Date.now().toString();
+            showGameId(gameId);
+            if (!board) {
+                board = Chessboard('board', {
+                    draggable: true,
+                    position: 'start'
                 });
-            });
+            }
+        });
 
-            startNewGame();
+        document.getElementById('copyButton').addEventListener('click', () => {
+            const gameIdText = document.getElementById('gameIdDisplay').textContent;
+            navigator.clipboard.writeText(gameIdText).then(() => {
+                alert('Game ID copied to clipboard!');
+            });
+        });
+
+        document.getElementById('joinGame').addEventListener('click', () => {
+            const inputId = document.getElementById('gameIdInput').value;
+            if (inputId) {
+                gameId = inputId;
+                if (!board) {
+                    board = Chessboard('board', {
+                        draggable: true,
+                        position: 'start'
+                    });
+                }
+            }
         });
     </script>
 </body>
