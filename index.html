@@ -6,126 +6,48 @@
     <title>School Chess - Multiplayer</title>
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f0f0f0;
-            min-height: 100vh;
+        /* ... (keep all existing styles) ... */
+        
+        .game-id-container {
+            background-color: #e8f4f8;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            border: 1px solid #3498db;
         }
 
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background-color: white;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-        }
-
-        h1 {
+        .game-id-container h3 {
+            margin: 0 0 0.5rem 0;
             color: #2c3e50;
-            text-align: center;
-            margin-bottom: 2rem;
         }
 
-        .game-section {
-            display: flex;
-            gap: 2rem;
-            margin-bottom: 2rem;
+        .game-id {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #3498db;
+            word-break: break-all;
         }
 
-        .board-container {
-            flex: 1;
-        }
-
-        .game-info {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .game-controls {
-            margin-bottom: 2rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        .join-game {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        input[type="text"] {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            width: 200px;
-        }
-
-        button {
+        .copy-button {
             background-color: #3498db;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 5px 10px;
+            border-radius: 3px;
             cursor: pointer;
-            font-size: 1rem;
-            transition: background-color 0.3s;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
         }
 
-        button:hover {
+        .copy-button:hover {
             background-color: #2980b9;
         }
 
-        #board {
-            margin: 0 auto;
-        }
-
-        .status-container {
-            background-color: #f8f9fa;
-            padding: 1rem;
-            border-radius: 5px;
-            margin-bottom: 1rem;
-        }
-
-        #status, #playerColor, #gameIdDisplay {
-            color: #2c3e50;
-            font-size: 1.1rem;
-            margin: 0.5rem 0;
-        }
-
-        .move-history {
-            background-color: #f8f9fa;
-            padding: 1rem;
-            border-radius: 5px;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .instructions {
-            background-color: #f8f9fa;
-            padding: 1rem;
-            border-radius: 5px;
-            margin-top: 2rem;
-        }
-
-        .instructions h2 {
-            color: #2c3e50;
-            margin-top: 0;
-        }
-
-        .instructions ol {
-            padding-left: 1.5rem;
-        }
-
-        .instructions li {
-            margin-bottom: 0.5rem;
-            color: #34495e;
+        .copy-success {
+            color: #27ae60;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            display: none;
         }
     </style>
 </head>
@@ -150,7 +72,13 @@
                 <div class="status-container">
                     <div id="status">Game not started</div>
                     <div id="playerColor"></div>
-                    <div id="gameIdDisplay"></div>
+                </div>
+
+                <div class="game-id-container" id="gameIdContainer" style="display: none;">
+                    <h3>Game ID (Share this with your friend):</h3>
+                    <div class="game-id" id="gameIdDisplay"></div>
+                    <button class="copy-button" id="copyButton">Copy Game ID</button>
+                    <div class="copy-success" id="copySuccess">Game ID copied!</div>
                 </div>
 
                 <div class="move-history" id="moveHistory">
@@ -205,7 +133,13 @@
 
         function updateGameId() {
             const gameIdEl = document.getElementById('gameIdDisplay');
-            gameIdEl.textContent = gameId ? `Game ID: ${gameId}` : '';
+            const gameIdContainer = document.getElementById('gameIdContainer');
+            if (gameId) {
+                gameIdEl.textContent = gameId;
+                gameIdContainer.style.display = 'block';
+            } else {
+                gameIdContainer.style.display = 'none';
+            }
         }
 
         function addMoveToHistory(move) {
@@ -273,6 +207,17 @@
                     updatePlayerColor();
                     updateGameId();
                 }
+            });
+
+            document.getElementById('copyButton').addEventListener('click', () => {
+                const gameIdText = document.getElementById('gameIdDisplay').textContent;
+                navigator.clipboard.writeText(gameIdText).then(() => {
+                    const copySuccess = document.getElementById('copySuccess');
+                    copySuccess.style.display = 'block';
+                    setTimeout(() => {
+                        copySuccess.style.display = 'none';
+                    }, 2000);
+                });
             });
 
             startNewGame();
