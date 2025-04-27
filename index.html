@@ -1,124 +1,59 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>School Chess - Multiplayer</title>
-    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f0f0f0;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        #board {
-            width: 400px;
-            margin: 20px auto;
-        }
-        .game-id-box {
-            background-color: #e8f4f8;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 20px 0;
-            border: 2px solid #3498db;
-        }
-        .game-id {
-            font-size: 24px;
-            font-weight: bold;
-            color: #3498db;
-            margin: 10px 0;
-        }
-        button {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 10px 0;
-        }
-        button:hover {
-            background-color: #2980b9;
-        }
-        input {
-            padding: 10px;
-            width: 200px;
-            margin-right: 10px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>School Chess - Multiplayer</h1>
-        
-        <button id="createGame">Create New Game</button>
-        
-        <div class="game-id-box" id="gameIdBox" style="display: none;">
-            <h3>Game ID (Share this with your friend):</h3>
-            <div class="game-id" id="gameIdDisplay"></div>
-            <button id="copyButton">Copy Game ID</button>
-        </div>
-
-        <div>
-            <input type="text" id="gameIdInput" placeholder="Enter Game ID">
-            <button id="joinGame">Join Game</button>
-        </div>
-
-        <div id="board"></div>
-    </div>
-
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-    <script>
-        let game = new Chess();
-        let board = null;
-        let gameId = null;
-
-        function showGameId(id) {
-            document.getElementById('gameIdDisplay').textContent = id;
-            document.getElementById('gameIdBox').style.display = 'block';
-        }
-
+// ... existing code ...
         document.getElementById('createGame').addEventListener('click', () => {
             gameId = Date.now().toString();
             showGameId(gameId);
             if (!board) {
                 board = Chessboard('board', {
                     draggable: true,
-                    position: 'start'
+                    position: 'start',
+                    pieceTheme: 'https://chessboardjs.com/img/chesspieces/alpha/{piece}.png',
+                    showNotation: true,
+                    onDragStart: function(source, piece) {
+                        if (game.game_over()) return false;
+                        if (piece.search(/^b/) !== -1) return false;
+                    },
+                    onDrop: function(source, target) {
+                        const move = game.move({
+                            from: source,
+                            to: target,
+                            promotion: 'q'
+                        });
+                        if (move === null) return 'snapback';
+                        board.position(game.fen());
+                    }
                 });
             }
         });
-
-        document.getElementById('copyButton').addEventListener('click', () => {
-            const gameIdText = document.getElementById('gameIdDisplay').textContent;
-            navigator.clipboard.writeText(gameIdText).then(() => {
-                alert('Game ID copied to clipboard!');
-            });
-        });
-
+// ... existing code ...
         document.getElementById('joinGame').addEventListener('click', () => {
             const inputId = document.getElementById('gameIdInput').value;
             if (inputId) {
                 gameId = inputId;
+                document.getElementById('statusMessage').textContent = 'Joining game...';
                 if (!board) {
                     board = Chessboard('board', {
                         draggable: true,
-                        position: 'start'
+                        position: 'start',
+                        pieceTheme: 'https://chessboardjs.com/img/chesspieces/alpha/{piece}.png',
+                        showNotation: true,
+                        onDragStart: function(source, piece) {
+                            if (game.game_over()) return false;
+                            if (piece.search(/^w/) !== -1) return false;
+                        },
+                        onDrop: function(source, target) {
+                            const move = game.move({
+                                from: source,
+                                to: target,
+                                promotion: 'q'
+                            });
+                            if (move === null) return 'snapback';
+                            board.position(game.fen());
+                        }
                     });
                 }
+                setTimeout(() => {
+                    document.getElementById('statusMessage').textContent = '';
+                }, 3000);
             }
         });
-    </script>
-</body>
-</html>
+// ... existing code ...
